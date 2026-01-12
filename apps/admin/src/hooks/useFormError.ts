@@ -12,6 +12,8 @@ const ERROR_CODE_TO_FIELD: Record<string, string> = {
   [ErrorCode.INVALID_GENIALLY_URL]: 'geniallyUrl',
   [ErrorCode.INVALID_SEMESTER_REFERENCE]: 'semesterId',
   [ErrorCode.DUPLICATE_SEMESTER_ORDER]: 'order',
+  [ErrorCode.WRONG_PASSWORD]: 'currentPassword',
+  [ErrorCode.WEAK_PASSWORD]: 'newPassword',
 };
 
 interface UseFormErrorReturn<T extends FieldValues> {
