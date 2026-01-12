@@ -1,0 +1,122 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is admin (requires custom claims)
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+    
+    // Check file size (max 10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Check if file is an image
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Check if file is a PDF
+    function isPDF() {
+      return request.resource.contentType == 'application/pdf';
+    }
+    
+    // Check if file is a document (PDF, Word, etc.)
+    function isDocument() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.*');
+    }
+
+    // ============================================
+    // Handbook Storage (Public Read)
+    // ============================================
+    match /handbook/{fileName} {
+      // Anyone can read handbook files (for login page flipbook)
+      allow read: if true;
+      
+      // Only admins can upload/delete handbook files
+      allow write: if isAdmin() && isPDF() && isValidSize();
+    }
+
+    // ============================================
+    // Course Materials Storage
+    // ============================================
+    match /courses/{courseId}/{allPaths=**} {
+      // Authenticated users can read course materials
+      allow read: if isAuthenticated();
+      
+      // Only admins can upload course materials
+      allow write: if isAdmin() && isValidSize();
+    }
+
+    // ============================================
+    // Student Submissions Storage
+    // ============================================
+    match /submissions/{studentId}/{allPaths=**} {
+      // Students can read their own submissions
+      // Admins can read all submissions
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == studentId || isAdmin());
+      
+      // Students can upload to their own folder
+      // Admins can upload to any folder
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == studentId || isAdmin()) &&
+        isValidSize();
+    }
+
+    // ============================================
+    // Media Library Storage (Admin Only)
+    // ============================================
+    match /media/{allPaths=**} {
+      // Authenticated users can read media files
+      allow read: if isAuthenticated();
+      
+      // Only admins can upload/delete media files
+      allow write: if isAdmin() && isValidSize();
+    }
+
+    // ============================================
+    // User Avatars Storage
+    // ============================================
+    match /avatars/{userId}/{fileName} {
+      // Anyone authenticated can read avatars
+      allow read: if isAuthenticated();
+      
+      // Users can upload their own avatar
+      // Admins can upload any avatar
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin()) &&
+        isImage() &&
+        request.resource.size < 2 * 1024 * 1024; // Max 2MB for avatars
+    }
+
+    // ============================================
+    // Temporary Uploads (for processing)
+    // ============================================
+    match /temp/{userId}/{allPaths=**} {
+      // Users can read/write their own temp files
+      allow read, write: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        isValidSize();
+    }
+
+    // ============================================
+    // Default: Deny all other access
+    // ============================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

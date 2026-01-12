@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, type ReactElement } from 'react';
 import { cn } from '../../utils/cn';
 
 export interface FormSuccessProps {
@@ -13,7 +13,7 @@ export interface FormSuccessProps {
 /**
  * FormSuccess component - displays form-level success messages
  */
-export function FormSuccess({ message, className, children }: FormSuccessProps): JSX.Element | null {
+export function FormSuccess({ message, className, children }: FormSuccessProps): ReactElement | null {
   if (!message && !children) {
     return null;
   }

@@ -41,3 +41,9 @@ export {
   TrackingLogList,
   type TrackingLogListProps,
 } from './TrackingLogs';
+
+// Tracking Log Modal
+export {
+  TrackingLogModal,
+  type TrackingLogModalProps,
+} from './TrackingLogModal';

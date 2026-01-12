@@ -88,7 +88,18 @@
     "majorCourseDuplicate": "Môn học đã có trong chuyên ngành",
     "majorSelectionRequired": "Bạn cần chọn chuyên ngành để tiếp tục",
     "majorAlreadySelected": "Bạn đã chọn chuyên ngành và không thể thay đổi",
-    "majorSelectionBlocked": "Chưa đến thời điểm chọn chuyên ngành"
+    "majorSelectionBlocked": "Chưa đến thời điểm chọn chuyên ngành",
+    "wrongPassword": "Mật khẩu hiện tại không đúng",
+    "weakPassword": "Mật khẩu mới không đủ mạnh",
+    "passwordMismatch": "Mật khẩu xác nhận không khớp",
+    "authRequired": "Vui lòng đăng nhập lại",
+    "emailTemplateNotFound": "Không tìm thấy template email",
+    "emailTemplateUpdateFailed": "Cập nhật template email thất bại",
+    "invalidPlaceholder": "Placeholder không hợp lệ",
+    "gmailNotConnected": "Chưa kết nối Gmail. Vui lòng kết nối trước khi gửi email",
+    "emailSendFailed": "Gửi email thất bại. Vui lòng thử lại",
+    "emailLogCreateFailed": "Không thể tạo log email",
+    "emailLogNotFound": "Không tìm thấy log email"
   },
   "semester": {
     "title": "Học kỳ",

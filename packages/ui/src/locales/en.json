@@ -88,7 +88,18 @@
     "majorCourseDuplicate": "Course already exists in major",
     "majorSelectionRequired": "You need to select a major to continue",
     "majorAlreadySelected": "You have already selected a major and cannot change it",
-    "majorSelectionBlocked": "Major selection is not available yet"
+    "majorSelectionBlocked": "Major selection is not available yet",
+    "wrongPassword": "Current password is incorrect",
+    "weakPassword": "New password is not strong enough",
+    "passwordMismatch": "Passwords do not match",
+    "authRequired": "Please sign in again",
+    "emailTemplateNotFound": "Email template not found",
+    "emailTemplateUpdateFailed": "Failed to update email template",
+    "invalidPlaceholder": "Invalid placeholder",
+    "gmailNotConnected": "Gmail not connected. Please connect before sending emails",
+    "emailSendFailed": "Failed to send email. Please try again",
+    "emailLogCreateFailed": "Failed to create email log",
+    "emailLogNotFound": "Email log not found"
   },
   "semester": {
     "title": "Semesters",

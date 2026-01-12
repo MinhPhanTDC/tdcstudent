@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
-import { ToastProvider } from '@tdc/ui';
+import { ToastProvider, TranslationProvider } from '@tdc/ui';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { FirebaseProvider } from '@/providers/FirebaseProvider';
 
@@ -26,9 +26,11 @@ export function Providers({ children }: ProvidersProps): JSX.Element {
   return (
     <FirebaseProvider>
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <AuthProvider requiredRole="admin">{children}</AuthProvider>
-        </ToastProvider>
+        <TranslationProvider defaultLocale="vi">
+          <ToastProvider>
+            <AuthProvider requiredRole="admin">{children}</AuthProvider>
+          </ToastProvider>
+        </TranslationProvider>
       </QueryClientProvider>
     </FirebaseProvider>
   );

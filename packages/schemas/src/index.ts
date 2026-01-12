@@ -248,8 +248,75 @@ export {
   PasswordSchema,
   PasswordChangeInputSchema,
   EmailSettingsSchema,
+  DEFAULT_EMAIL_SETTINGS,
   validatePasswordStrength,
   type PasswordChangeInput,
   type PasswordValidationResult,
   type EmailSettings,
 } from './settings.schema';
+
+// Email template schemas (Phase 7)
+export {
+  PlaceholderSchema,
+  EmailTemplateTypeSchema,
+  EmailTemplateSchema,
+  CreateEmailTemplateInputSchema,
+  UpdateEmailTemplateInputSchema,
+  VALID_PLACEHOLDERS,
+  PLACEHOLDER_INFO,
+  PLACEHOLDER_REGEX,
+  DEFAULT_EMAIL_TEMPLATES,
+  extractPlaceholders,
+  validatePlaceholders,
+  replacePlaceholders,
+  hasRemainingPlaceholders,
+  type Placeholder,
+  type EmailTemplateType,
+  type EmailTemplate,
+  type CreateEmailTemplateInput,
+  type UpdateEmailTemplateInput,
+} from './email-template.schema';
+
+// Help topic schemas (Phase 7)
+export {
+  HelpCategorySchema,
+  HelpTopicSchema,
+  HELP_CATEGORY_LABELS,
+  HELP_CATEGORY_ICONS,
+  HELP_CATEGORIES_ORDER,
+  filterHelpTopics,
+  groupTopicsByCategory,
+  type HelpCategory,
+  type HelpTopic,
+} from './help-topic.schema';
+
+// Media schemas
+export {
+  MediaTypeSchema,
+  MediaCategorySchema,
+  MediaFileSchema,
+  CreateMediaInputSchema,
+  UpdateMediaInputSchema,
+  MediaFilterSchema,
+  LoginBackgroundSettingsSchema,
+  type MediaType,
+  type MediaCategory,
+  type MediaFile,
+  type CreateMediaInput,
+  type UpdateMediaInput,
+  type MediaFilter,
+  type LoginBackgroundSettings,
+} from './media.schema';
+
+// Email log schemas (Phase 7)
+export {
+  EmailStatusSchema,
+  EmailLogSchema,
+  CreateEmailLogInputSchema,
+  EmailLogFilterSchema,
+  isEmailLogComplete,
+  type EmailStatus,
+  type EmailLog,
+  type CreateEmailLogInput,
+  type EmailLogFilter,
+} from './email-log.schema';

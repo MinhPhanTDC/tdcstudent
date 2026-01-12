@@ -2,7 +2,12 @@
 
 import { Card, Input, Avatar } from '@tdc/ui';
 import { useAuth } from '@/contexts/AuthContext';
+import { PasswordChangeSection } from '@/components/features/profile';
 
+/**
+ * Profile page - displays user profile information and password change section
+ * Requirements: 10.1
+ */
 export default function ProfilePage(): JSX.Element {
   const { user } = useAuth();
 
@@ -40,6 +45,9 @@ export default function ProfilePage(): JSX.Element {
           </form>
         </Card>
       </div>
+
+      {/* Password Change Section - Requirements: 10.1, 10.2 */}
+      <PasswordChangeSection />
     </div>
   );
 }

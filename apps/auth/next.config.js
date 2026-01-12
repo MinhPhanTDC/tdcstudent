@@ -8,6 +8,14 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+    ],
+  },
   experimental: {
     serverComponentsExternalPackages: ['firebase', 'undici'],
   },

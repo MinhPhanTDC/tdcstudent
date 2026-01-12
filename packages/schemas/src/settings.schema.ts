@@ -42,16 +42,27 @@ export interface PasswordValidationResult {
 }
 
 /**
- * Email settings schema
+ * Email settings schema for Gmail OAuth integration
  * Requirements: 2.1
  */
 export const EmailSettingsSchema = z.object({
   gmailConnected: z.boolean(),
   gmailEmail: EmailSchema.nullable(),
   connectedAt: TimestampSchema.nullable(),
+  connectedBy: z.string().nullable().optional(),
 });
 
 export type EmailSettings = z.infer<typeof EmailSettingsSchema>;
+
+/**
+ * Default email settings (disconnected state)
+ */
+export const DEFAULT_EMAIL_SETTINGS: EmailSettings = {
+  gmailConnected: false,
+  gmailEmail: null,
+  connectedAt: null,
+  connectedBy: null,
+};
 
 /**
  * Validate password strength

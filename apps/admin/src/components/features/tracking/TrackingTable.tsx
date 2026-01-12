@@ -1,6 +1,6 @@
 'use client';
 
-import { Table, Badge, Card, EmptyState, type Column } from '@tdc/ui';
+import { Table, Badge, Card, EmptyState, Button, type Column } from '@tdc/ui';
 import type { ProgressStatus } from '@tdc/schemas';
 import type { TrackingData } from '@/hooks/useTracking';
 
@@ -21,6 +21,8 @@ export interface TrackingTableProps {
   onApprove?: (item: TrackingData) => void;
   /** Callback when reject is clicked */
   onReject?: (item: TrackingData) => void;
+  /** Callback when history button is clicked - Requirements: 3.1 */
+  onViewHistory?: (item: TrackingData) => void;
 }
 
 /**
@@ -127,7 +129,7 @@ function TrackingTableSkeleton(): JSX.Element {
 
 /**
  * Tracking table component displaying student progress data
- * Requirements: 1.1, 1.2, 1.7, 10.1, 10.2
+ * Requirements: 1.1, 1.2, 1.7, 3.1, 10.1, 10.2
  */
 export function TrackingTable({
   data,
@@ -136,6 +138,7 @@ export function TrackingTable({
   sortDirection,
   onSort,
   onRowClick,
+  onViewHistory,
 }: TrackingTableProps): JSX.Element {
   // Loading state - Requirements: 10.1
   if (isLoading) {
@@ -255,6 +258,37 @@ export function TrackingTable({
               </svg>
             </span>
           )}
+        </div>
+      ),
+    },
+    // Actions column with history button - Requirements: 3.1
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      render: (item) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewHistory?.(item)}
+            title="Xem lịch sử thay đổi"
+          >
+            <svg
+              className="mr-1 h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Lịch sử
+          </Button>
         </div>
       ),
     },

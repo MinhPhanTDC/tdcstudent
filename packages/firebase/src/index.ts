@@ -179,5 +179,40 @@ export {
 // Password Service (Phase 7)
 export { passwordService } from './services/password.service';
 
+// Settings Service (Phase 7)
+export {
+  settingsService,
+  isEmailSettingsConsistent,
+  createDisconnectedState,
+  createConnectedState,
+  SettingsErrorCode,
+} from './services/settings.service';
+
+// Email Template Service (Phase 7)
+export {
+  emailTemplateService,
+  EmailTemplateErrorCode,
+} from './services/email-template.service';
+
+// Email Service (Phase 7)
+export {
+  emailService,
+  createEmailData,
+  validateEmailLogCompleteness,
+  EmailServiceErrorCode,
+  type EmailRecipient,
+  type SendEmailResult,
+  type BulkEmailResult,
+} from './services/email.service';
+
+// Email Log Repository (Phase 7)
+export {
+  emailLogRepository,
+  EmailLogRepositoryErrorCode,
+} from './repositories/email-log.repository';
+
+// Media Repository
+export { mediaRepository } from './repositories/media.repository';
+
 // Utilities
 export { generateSecurePassword, validatePasswordStrength } from './utils/password';

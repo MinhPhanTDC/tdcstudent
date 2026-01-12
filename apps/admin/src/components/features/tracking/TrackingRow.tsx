@@ -17,6 +17,8 @@ export interface TrackingRowProps {
   onApprove?: (data: TrackingData) => void;
   /** Callback when reject button is clicked */
   onReject?: (data: TrackingData) => void;
+  /** Callback when history button is clicked - Requirements: 3.1 */
+  onViewHistory?: (data: TrackingData) => void;
 }
 
 /**
@@ -108,7 +110,7 @@ function StatusIcon({ status }: { status: ProgressStatus }): JSX.Element {
 
 /**
  * Tracking row component displaying a single student's progress
- * Requirements: 1.2, 2.1, 2.2
+ * Requirements: 1.2, 2.1, 2.2, 3.1
  */
 export function TrackingRow({
   data,
@@ -117,6 +119,7 @@ export function TrackingRow({
   onEditLinks,
   onApprove,
   onReject,
+  onViewHistory,
 }: TrackingRowProps): JSX.Element {
   const canEdit = data.status !== 'completed' && data.status !== 'locked';
   const showApproveButton = data.status === 'pending_approval';
@@ -225,6 +228,29 @@ export function TrackingRow({
       {/* Action buttons */}
       <td className="px-4 py-3">
         <div className="flex justify-end gap-2">
+          {/* History button - Requirements: 3.1 */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewHistory?.(data)}
+            title="Xem lịch sử thay đổi"
+          >
+            <svg
+              className="mr-1 h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Lịch sử
+          </Button>
           {showApproveButton && (
             <Button
               variant="primary"

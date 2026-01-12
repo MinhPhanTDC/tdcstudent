@@ -96,6 +96,23 @@ const ERROR_CODE_TO_TRANSLATION_KEY: Record<ErrorCodeType, string> = {
   [ErrorCode.MAJOR_SELECTION_REQUIRED]: 'errors.majorSelectionRequired',
   [ErrorCode.MAJOR_ALREADY_SELECTED]: 'errors.majorAlreadySelected',
   [ErrorCode.MAJOR_SELECTION_BLOCKED]: 'errors.majorSelectionBlocked',
+
+  // Password errors (Phase 7)
+  [ErrorCode.WRONG_PASSWORD]: 'errors.wrongPassword',
+  [ErrorCode.WEAK_PASSWORD]: 'errors.weakPassword',
+  [ErrorCode.PASSWORD_MISMATCH]: 'errors.passwordMismatch',
+  [ErrorCode.AUTH_REQUIRED]: 'errors.authRequired',
+
+  // Email template errors (Phase 7)
+  [ErrorCode.EMAIL_TEMPLATE_NOT_FOUND]: 'errors.emailTemplateNotFound',
+  [ErrorCode.EMAIL_TEMPLATE_UPDATE_FAILED]: 'errors.emailTemplateUpdateFailed',
+  [ErrorCode.INVALID_PLACEHOLDER]: 'errors.invalidPlaceholder',
+
+  // Email sending errors (Phase 7)
+  [ErrorCode.GMAIL_NOT_CONNECTED]: 'errors.gmailNotConnected',
+  [ErrorCode.EMAIL_SEND_FAILED]: 'errors.emailSendFailed',
+  [ErrorCode.EMAIL_LOG_CREATE_FAILED]: 'errors.emailLogCreateFailed',
+  [ErrorCode.EMAIL_LOG_NOT_FOUND]: 'errors.emailLogNotFound',
 };
 
 /**

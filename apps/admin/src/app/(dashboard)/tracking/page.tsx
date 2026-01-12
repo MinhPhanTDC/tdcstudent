@@ -11,7 +11,8 @@ import {
   QuickTrackActions,
   BulkPassModal,
   BulkPassReport,
-} from '@/components/features/tracking/QuickTrack';
+  TrackingLogModal,
+} from '@/components/features/tracking';
 import { RejectModal } from '@/components/features/tracking/StatusActions/RejectModal';
 import {
   useTracking,
@@ -104,6 +105,9 @@ export default function TrackingPage(): JSX.Element {
   const [bulkPassModalOpen, setBulkPassModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedForReject, setSelectedForReject] = useState<TrackingData | null>(null);
+  // History modal state - Requirements: 3.1, 3.2
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedForHistory, setSelectedForHistory] = useState<TrackingData | null>(null);
 
   // Handle tab switch
   const handleTabSwitch = useCallback((tab: TrackingTab) => {
@@ -144,6 +148,18 @@ export default function TrackingPage(): JSX.Element {
   const handleRejectClose = useCallback(() => {
     setRejectModalOpen(false);
     setSelectedForReject(null);
+  }, []);
+
+  // Handle view history - Requirements: 3.1
+  const handleViewHistory = useCallback((item: TrackingData) => {
+    setSelectedForHistory(item);
+    setHistoryModalOpen(true);
+  }, []);
+
+  // Handle history modal close - Requirements: 3.7
+  const handleHistoryClose = useCallback(() => {
+    setHistoryModalOpen(false);
+    setSelectedForHistory(null);
   }, []);
 
   // Handle selection change in Quick Track
@@ -262,6 +278,7 @@ export default function TrackingPage(): JSX.Element {
             onSort={handleSort}
             onApprove={handleApprove}
             onReject={handleRejectClick}
+            onViewHistory={handleViewHistory}
           />
 
           {/* Pagination - Requirements: 1.6 */}
@@ -328,6 +345,18 @@ export default function TrackingPage(): JSX.Element {
         result={bulkPass.result}
         onClose={handleReportClose}
       />
+
+      {/* Tracking Log Modal - Requirements: 3.2, 3.3, 3.4, 3.5, 3.6, 3.7 */}
+      {selectedForHistory && (
+        <TrackingLogModal
+          isOpen={historyModalOpen}
+          onClose={handleHistoryClose}
+          studentId={selectedForHistory.studentId}
+          courseId={selectedForHistory.courseId}
+          studentName={selectedForHistory.studentName}
+          courseName={selectedForHistory.courseName}
+        />
+      )}
     </div>
   );
 }

@@ -106,6 +106,23 @@ const ERROR_MESSAGES: Record<ErrorCodeType, string> = {
   [ErrorCode.MAJOR_SELECTION_REQUIRED]: 'Bạn cần chọn chuyên ngành để tiếp tục',
   [ErrorCode.MAJOR_ALREADY_SELECTED]: 'Bạn đã chọn chuyên ngành và không thể thay đổi',
   [ErrorCode.MAJOR_SELECTION_BLOCKED]: 'Chưa đến thời điểm chọn chuyên ngành',
+
+  // Password errors (Phase 7)
+  [ErrorCode.WRONG_PASSWORD]: 'Mật khẩu hiện tại không đúng',
+  [ErrorCode.WEAK_PASSWORD]: 'Mật khẩu mới không đủ mạnh',
+  [ErrorCode.PASSWORD_MISMATCH]: 'Mật khẩu xác nhận không khớp',
+  [ErrorCode.AUTH_REQUIRED]: 'Vui lòng đăng nhập lại',
+
+  // Email template errors (Phase 7)
+  [ErrorCode.EMAIL_TEMPLATE_NOT_FOUND]: 'Không tìm thấy mẫu email',
+  [ErrorCode.EMAIL_TEMPLATE_UPDATE_FAILED]: 'Cập nhật mẫu email thất bại',
+  [ErrorCode.INVALID_PLACEHOLDER]: 'Placeholder không hợp lệ',
+
+  // Email sending errors (Phase 7)
+  [ErrorCode.GMAIL_NOT_CONNECTED]: 'Chưa kết nối Gmail. Vui lòng kết nối trước khi gửi email',
+  [ErrorCode.EMAIL_SEND_FAILED]: 'Gửi email thất bại. Vui lòng thử lại',
+  [ErrorCode.EMAIL_LOG_CREATE_FAILED]: 'Không thể tạo log email',
+  [ErrorCode.EMAIL_LOG_NOT_FOUND]: 'Không tìm thấy log email',
 };
 
 /**

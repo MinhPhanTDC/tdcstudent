@@ -5,10 +5,22 @@
   "targets": {
     "tdcstudent-31d45": {
       "hosting": {
-        "auth": ["tdc-auth"],
-        "admin": ["tdc-admin"],
-        "student": ["tdc-student"]
+        "auth": [
+          "tdc-auth"
+        ],
+        "admin": [
+          "tdc-admin-2854e"
+        ],
+        "student": [
+          "tdc-student"
+        ]
+      },
+      "storage": {
+        "default": [
+          "tdcstudent-31d45.appspot.com"
+        ]
       }
     }
-  }
+  },
+  "etags": {}
 }
