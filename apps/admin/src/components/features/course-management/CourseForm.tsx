@@ -5,27 +5,29 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Input, TextArea, Button, Checkbox, Select, FormError, type SelectOption } from '@tdc/ui';
 import { CreateCourseInputSchema, type CreateCourseInput } from '@tdc/schemas';
 import { useSemesters } from '@/hooks/useSemesters';
+import { useFormError } from '@/hooks/useFormError';
+import { type AppError } from '@tdc/types';
 
 interface CourseFormProps {
-  onSubmit: (data: CreateCourseInput) => Promise<void>;
+  onSubmit: (data: CreateCourseInput) => Promise<{ success: boolean; error?: AppError }>;
   isLoading?: boolean;
   defaultValues?: Partial<CreateCourseInput>;
-  /** Error message from API */
-  error?: string | null;
 }
 
 /**
  * CourseForm component - form for creating/editing courses
- * Requirements: 2.2, 2.3, 2.4, 7.3
+ * Requirements: 2.2, 2.3, 2.4, 7.3, 1.5, 3.3
  */
-export function CourseForm({ onSubmit, isLoading, defaultValues, error }: CourseFormProps): JSX.Element {
+export function CourseForm({ onSubmit, isLoading, defaultValues }: CourseFormProps): JSX.Element {
   const { data: semesters = [], isLoading: semestersLoading } = useSemesters();
+  const { formError, handleApiError, clearFormError } = useFormError<CreateCourseInput>();
 
   const {
     register,
     handleSubmit,
     control,
     formState: { errors },
+    setError,
   } = useForm<CreateCourseInput>({
     resolver: zodResolver(CreateCourseInputSchema),
     defaultValues: {
@@ -48,8 +50,17 @@ export function CourseForm({ onSubmit, isLoading, defaultValues, error }: Course
     label: semester.name,
   }));
 
+  const handleFormSubmit = async (data: CreateCourseInput): Promise<void> => {
+    clearFormError();
+    const result = await onSubmit(data);
+    
+    if (!result.success && result.error) {
+      handleApiError(result.error, setError);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <Input
         label="Tên môn học"
         placeholder="Nhập tên môn học"
@@ -120,7 +131,7 @@ export function CourseForm({ onSubmit, isLoading, defaultValues, error }: Course
         {...register('isActive')}
       />
 
-      <FormError message={error} />
+      <FormError message={formError} />
 
       <div className="flex gap-3">
         <Button type="submit" loading={isLoading}>

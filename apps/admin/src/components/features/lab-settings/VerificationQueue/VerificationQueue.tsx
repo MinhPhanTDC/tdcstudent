@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Skeleton } from '@tdc/ui';
+import { Skeleton, EmptyState } from '@tdc/ui';
 import {
   useLabVerification,
   useApproveVerification,
@@ -13,7 +13,7 @@ import { RejectModal } from './RejectModal';
 
 /**
  * VerificationQueue component - displays pending lab verifications
- * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5
+ * Requirements: 1.2, 4.1, 4.2, 4.3, 4.4, 4.5
  */
 export function VerificationQueue(): JSX.Element {
   const { data: pendingItems, isLoading, error } = useLabVerification();
@@ -84,8 +84,27 @@ export function VerificationQueue(): JSX.Element {
     <div className="space-y-4">
       <VerificationQueueHeader count={items.length} />
 
+      {/* Empty state - Requirements: 1.2 */}
       {items.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon={
+            <svg
+              className="h-12 w-12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          title="Không có yêu cầu nào đang chờ xác nhận"
+          description="Các yêu cầu mới sẽ xuất hiện ở đây khi học viên gửi"
+        />
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
@@ -140,25 +159,6 @@ function VerificationQueueHeader({
 }
 
 /**
- * Empty state when no pending verifications
- */
-function EmptyState(): JSX.Element {
-  return (
-    <div className="rounded-lg border border-secondary-200 bg-secondary-50 p-8 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary-100">
-        <CheckCircleIcon />
-      </div>
-      <p className="text-sm font-medium text-secondary-700">
-        Không có yêu cầu nào đang chờ xác nhận
-      </p>
-      <p className="mt-1 text-sm text-secondary-500">
-        Các yêu cầu mới sẽ xuất hiện ở đây khi học viên gửi
-      </p>
-    </div>
-  );
-}
-
-/**
  * Skeleton for loading state
  */
 function VerificationItemSkeleton(): JSX.Element {
@@ -178,26 +178,5 @@ function VerificationItemSkeleton(): JSX.Element {
         <Skeleton width={100} height={32} rounded="md" />
       </div>
     </div>
-  );
-}
-
-// Icon component
-function CheckCircleIcon(): JSX.Element {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-secondary-400"
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
   );
 }

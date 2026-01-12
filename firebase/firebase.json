@@ -20,7 +20,7 @@
     },
     {
       "target": "admin",
-      "public": "../apps/admin/out",
+      "public": "../apps/admin/.next",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {
@@ -31,7 +31,7 @@
     },
     {
       "target": "student",
-      "public": "../apps/student/out",
+      "public": "../apps/student/.next",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {

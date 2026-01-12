@@ -1,6 +1,6 @@
 'use client';
 
-import { Flipbook, Skeleton } from '@tdc/ui';
+import { FlipbookLazy, Skeleton } from '@tdc/ui';
 import { useStudentHandbook } from '@/hooks/useStudentHandbook';
 
 /**
@@ -82,7 +82,7 @@ export function StudentHandbook(): JSX.Element {
   // Display flipbook with handbook
   return (
     <div className="flex flex-col items-center">
-      <Flipbook
+      <FlipbookLazy
         pdfUrl={handbook.pdfUrl}
         width={450}
         height={636}

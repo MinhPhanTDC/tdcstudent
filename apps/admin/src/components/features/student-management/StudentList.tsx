@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Table, Badge, Button, Avatar, Card, EmptyState, ConfirmModal, useToast, type Column } from '@tdc/ui';
+import { Table, Badge, Button, Avatar, Card, EmptyState, ConfirmModal, useToast, Skeleton, SkeletonAvatar, type Column } from '@tdc/ui';
 import { useStudents, useDeactivateStudent, useActivateStudent, type StudentWithUser } from '@/hooks/useStudents';
 import { StudentSearch } from './StudentSearch';
 import { StudentFilters, type StudentFiltersValue } from './StudentFilters';
@@ -20,7 +20,7 @@ const PAGE_SIZE = 10;
 
 /**
  * Skeleton component for student list loading state
- * Requirements: 8.1
+ * Requirements: 1.1 - Display consistent loading indicators with skeleton screens
  */
 function StudentListSkeleton(): JSX.Element {
   return (
@@ -29,13 +29,13 @@ function StudentListSkeleton(): JSX.Element {
         {/* Table header skeleton */}
         <div className="flex items-center border-b border-secondary-200 pb-3">
           <div className="flex-1">
-            <div className="h-4 w-20 animate-pulse rounded bg-secondary-200" />
+            <Skeleton variant="text" width={80} height={16} />
           </div>
           <div className="w-24">
-            <div className="h-4 w-16 animate-pulse rounded bg-secondary-200" />
+            <Skeleton variant="text" width={64} height={16} />
           </div>
           <div className="w-24">
-            <div className="h-4 w-16 animate-pulse rounded bg-secondary-200" />
+            <Skeleton variant="text" width={64} height={16} />
           </div>
           <div className="w-32" />
         </div>
@@ -43,21 +43,21 @@ function StudentListSkeleton(): JSX.Element {
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center py-3">
             <div className="flex flex-1 items-center gap-3">
-              <div className="h-10 w-10 animate-pulse rounded-full bg-secondary-200" />
+              <SkeletonAvatar size="md" />
               <div className="space-y-2">
-                <div className="h-4 w-32 animate-pulse rounded bg-secondary-200" />
-                <div className="h-3 w-48 animate-pulse rounded bg-secondary-100" />
+                <Skeleton variant="text" width={128} height={16} />
+                <Skeleton variant="text" width={192} height={12} />
               </div>
             </div>
             <div className="w-24">
-              <div className="h-4 w-16 animate-pulse rounded bg-secondary-100" />
+              <Skeleton variant="text" width={64} height={16} />
             </div>
             <div className="w-24">
-              <div className="h-6 w-16 animate-pulse rounded-full bg-secondary-100" />
+              <Skeleton variant="rectangular" width={64} height={24} rounded="full" />
             </div>
             <div className="flex w-32 justify-end gap-2">
-              <div className="h-8 w-16 animate-pulse rounded bg-secondary-100" />
-              <div className="h-8 w-20 animate-pulse rounded bg-secondary-100" />
+              <Skeleton variant="rectangular" width={64} height={32} />
+              <Skeleton variant="rectangular" width={80} height={32} />
             </div>
           </div>
         ))}

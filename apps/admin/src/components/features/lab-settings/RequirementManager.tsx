@@ -16,6 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { EmptyState } from '@tdc/ui';
 import type { LabRequirement } from '@tdc/schemas';
 import { RequirementItem } from './RequirementItem';
 
@@ -36,7 +37,7 @@ export interface RequirementManagerProps {
 
 /**
  * RequirementManager component - manages lab requirements with drag-drop reordering
- * Requirements: 3.1, 3.5, 3.6
+ * Requirements: 1.2, 3.1, 3.5, 3.6
  */
 export function RequirementManager({
   requirements,
@@ -80,14 +81,28 @@ export function RequirementManager({
     }
   };
 
+  // Empty state - Requirements: 1.2
   if (requirements.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-secondary-300 p-8 text-center">
-        <p className="text-secondary-500">Chưa có yêu cầu nào.</p>
-        <p className="mt-1 text-sm text-secondary-400">
-          Nhấn &quot;Thêm yêu cầu&quot; để tạo yêu cầu mới.
-        </p>
-      </div>
+      <EmptyState
+        icon={
+          <svg
+            className="h-12 w-12"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+            />
+          </svg>
+        }
+        title="Chưa có yêu cầu nào"
+        description="Nhấn 'Thêm yêu cầu' để tạo yêu cầu mới cho học viên"
+      />
     );
   }
 

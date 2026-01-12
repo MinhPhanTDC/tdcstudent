@@ -78,6 +78,8 @@ export function useMediaFiles(filter?: MediaFilter): UseMediaFilesReturn {
       type = 'document';
     }
 
+    console.log('Starting upload:', { name: file.name, type, category, size: file.size });
+
     const result = await mediaRepository.create(file, {
       name: file.name,
       type,
@@ -87,8 +89,10 @@ export function useMediaFiles(filter?: MediaFilter): UseMediaFilesReturn {
     });
 
     if (result.success) {
+      console.log('Upload successful:', result.data);
       setFiles((prev) => [result.data, ...prev]);
     } else {
+      console.error('Upload failed:', result.error);
       setError(result.error.message);
     }
 

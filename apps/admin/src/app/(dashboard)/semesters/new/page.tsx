@@ -16,7 +16,7 @@ export default function NewSemesterPage(): JSX.Element {
   const { data: nextOrder = 0 } = useNextSemesterOrder();
   const toast = useToast();
 
-  const handleSubmit = async (data: CreateSemesterInput): Promise<void> => {
+  const handleSubmit = async (data: CreateSemesterInput): Promise<{ success: boolean; error?: import('@tdc/types').AppError }> => {
     const result = await createSemester.mutateAsync(data);
     if (result.success) {
       toast.success('Đã tạo học kỳ thành công');
@@ -24,6 +24,7 @@ export default function NewSemesterPage(): JSX.Element {
     } else {
       toast.error('Không thể tạo học kỳ');
     }
+    return result;
   };
 
   const handleCancel = (): void => {

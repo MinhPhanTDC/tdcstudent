@@ -12,6 +12,17 @@ export {
   type FirebaseConfig,
 } from './config';
 
+// Query configuration
+export {
+  defaultQueryConfig,
+  realtimeQueryConfig,
+  staticQueryConfig,
+  defaultMutationConfig,
+  createQueryClientConfig,
+  queryKeys,
+  invalidationPatterns,
+} from './config/queryConfig';
+
 // Auth functions
 export {
   signIn,
@@ -34,6 +45,30 @@ export {
   createCourseError,
   createStudentError,
   createImportError,
+  // Network error utilities
+  isTransientError,
+  getNetworkErrorType,
+  withRetry,
+  withRetryResult,
+  calculateRetryDelay,
+  getUserFriendlyMessage,
+  getNetworkErrorMessage,
+  ERROR_MESSAGES,
+  DEFAULT_RETRY_CONFIG,
+  // New error categorization utilities
+  NetworkError,
+  getErrorCategory,
+  getErrorSeverity,
+  shouldShowRetry,
+  createNetworkError,
+  // Types
+  type NetworkErrorType,
+  type NetworkErrorDetails,
+  type RetryConfig,
+  type RetryState,
+  type RetryResult,
+  type ErrorCategory,
+  type ErrorSeverity,
 } from './errors';
 
 // Repositories
@@ -216,3 +251,15 @@ export { mediaRepository } from './repositories/media.repository';
 
 // Utilities
 export { generateSecurePassword, validatePasswordStrength } from './utils/password';
+
+// Auth redirect utilities (Phase 8)
+export {
+  redirectToAuth,
+  buildAuthRedirectUrl,
+  getCurrentPageUrl,
+  getErrorCodeFromAuthError,
+  isSessionExpiredError,
+  isPermissionDeniedError,
+  getAuthErrorTypeFromCode,
+  type AuthErrorType,
+} from './utils/authRedirect';

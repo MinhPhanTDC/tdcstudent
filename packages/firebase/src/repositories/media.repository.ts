@@ -43,12 +43,17 @@ async function uploadToStorage(
     const storagePath = `media/${category}/${timestamp}_${safeName}`;
     const storageRef = ref(storage.instance, storagePath);
 
+    console.log('Uploading to:', storagePath);
     await uploadBytes(storageRef, file);
+    console.log('Upload complete, getting URL...');
     const url = await getDownloadURL(storageRef);
+    console.log('Got URL:', url);
 
     return success({ url, storagePath });
   } catch (error) {
-    return failure(new AppError(ErrorCode.UNKNOWN_ERROR, 'Failed to upload file'));
+    console.error('Upload error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
+    return failure(new AppError(ErrorCode.UNKNOWN_ERROR, errorMessage));
   }
 }
 

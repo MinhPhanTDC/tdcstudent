@@ -17,7 +17,7 @@ function NewCourseContent(): JSX.Element {
   const createCourse = useCreateCourse();
   const toast = useToast();
 
-  const handleSubmit = async (data: CreateCourseInput): Promise<void> => {
+  const handleSubmit = async (data: CreateCourseInput): Promise<{ success: boolean; error?: import('@tdc/types').AppError }> => {
     const result = await createCourse.mutateAsync(data);
     if (result.success) {
       toast.success('Đã tạo môn học thành công');
@@ -30,6 +30,7 @@ function NewCourseContent(): JSX.Element {
     } else {
       toast.error('Không thể tạo môn học');
     }
+    return result;
   };
 
   return (

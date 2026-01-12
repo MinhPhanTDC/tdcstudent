@@ -17,7 +17,7 @@
       },
       "storage": {
         "default": [
-          "tdcstudent-31d45.appspot.com"
+          "tdcstudent-31d45.firebasestorage.app"
         ]
       }
     }

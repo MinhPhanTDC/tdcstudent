@@ -1,9 +1,9 @@
-import { type ImgHTMLAttributes } from 'react';
+import { type ImgHTMLAttributes, useState } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../utils/cn';
 
 const avatarVariants = cva(
-  'inline-flex items-center justify-center rounded-full bg-secondary-200 font-medium text-secondary-600',
+  'inline-flex items-center justify-center rounded-full bg-secondary-200 font-medium text-secondary-600 overflow-hidden',
   {
     variants: {
       size: {
@@ -39,24 +39,30 @@ function getInitials(name: string): string {
 
 /**
  * Avatar component with image or initials fallback
+ * Includes lazy loading and error handling for images
  */
 export function Avatar({ className, size, src, name, alt, ...props }: AvatarProps): JSX.Element {
+  const [hasError, setHasError] = useState(false);
   const initials = name ? getInitials(name) : '?';
 
-  if (src) {
+  // Show initials fallback if no src or image failed to load
+  if (!src || hasError) {
     return (
-      <img
-        src={src}
-        alt={alt || name || 'Avatar'}
-        className={cn(avatarVariants({ size, className }), 'object-cover')}
-        {...props}
-      />
+      <span className={cn(avatarVariants({ size, className }))} aria-label={name || 'Avatar'}>
+        {initials}
+      </span>
     );
   }
 
   return (
-    <span className={cn(avatarVariants({ size, className }))} aria-label={name || 'Avatar'}>
-      {initials}
-    </span>
+    <img
+      src={src}
+      alt={alt || name || 'Avatar'}
+      loading="lazy"
+      decoding="async"
+      onError={() => setHasError(true)}
+      className={cn(avatarVariants({ size, className }), 'object-cover')}
+      {...props}
+    />
   );
 }

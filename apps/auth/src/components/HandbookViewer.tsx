@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Flipbook, Skeleton } from '@tdc/ui';
+import { FlipbookLazy, Skeleton } from '@tdc/ui';
 import { handbookService } from '@tdc/firebase';
 import type { HandbookSettings } from '@tdc/schemas';
 
@@ -129,7 +129,7 @@ export function HandbookViewer({
 
   // Render Flipbook with handbook URL
   return (
-    <Flipbook
+    <FlipbookLazy
       pdfUrl={handbook.pdfUrl}
       width={width}
       height={height}

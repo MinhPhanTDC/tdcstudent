@@ -8,7 +8,15 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { onAuthChange, getCurrentUser, signOut, exchangeToken, presenceService } from '@tdc/firebase';
+import { 
+  onAuthChange, 
+  getCurrentUser, 
+  signOut, 
+  exchangeToken, 
+  presenceService,
+  redirectToAuth,
+  type AuthErrorType,
+} from '@tdc/firebase';
 import { type User, type UserRole, UserSchema } from '@tdc/schemas';
 import { Spinner } from '@tdc/ui';
 
@@ -98,6 +106,18 @@ function clearTokenFromUrl(): void {
   window.history.replaceState({}, '', window.location.pathname + window.location.search);
 }
 
+/**
+ * Redirect to auth with error and return URL
+ * Requirements: 3.4 - WHEN an authentication error occurs THEN redirect to login with appropriate message
+ */
+function handleAuthError(error: AuthErrorType): void {
+  clearUserSession();
+  redirectToAuth({
+    error,
+    includeReturnUrl: true,
+  });
+}
+
 export function AuthProvider({ children, requiredRole }: AuthProviderProps): JSX.Element {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -131,9 +151,8 @@ export function AuthProvider({ children, requiredRole }: AuthProviderProps): JSX
 
           // Check role
           if (result.data.role !== requiredRole) {
-            console.log('Wrong role, redirecting...');
-            const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
-            window.location.href = `${authUrl}?error=unauthorized`;
+            console.log('Wrong role, redirecting with permission_denied error...');
+            handleAuthError('permission_denied');
             return;
           }
 
@@ -145,15 +164,13 @@ export function AuthProvider({ children, requiredRole }: AuthProviderProps): JSX
         } else {
           console.error('Token exchange failed:', result.error);
           setIsProcessingToken(false);
-          // Token invalid, redirect to login
-          const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
-          window.location.href = authUrl;
+          // Token invalid, redirect to login with error
+          handleAuthError('invalid_token');
         }
       } catch (error) {
         console.error('Error processing token from URL:', error);
         setIsProcessingToken(false);
-        const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
-        window.location.href = authUrl;
+        handleAuthError('invalid_token');
       }
     };
 
@@ -196,9 +213,8 @@ export function AuthProvider({ children, requiredRole }: AuthProviderProps): JSX
           if (result.success && result.data) {
             // Check role
             if (result.data.role !== requiredRole) {
-              console.log('Wrong role, redirecting...');
-              const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
-              window.location.href = `${authUrl}?error=unauthorized`;
+              console.log('Wrong role, redirecting with permission_denied error...');
+              handleAuthError('permission_denied');
               return;
             }
 
@@ -219,6 +235,7 @@ export function AuthProvider({ children, requiredRole }: AuthProviderProps): JSX
   }, [requiredRole, user, isProcessingToken]);
 
   // Redirect to login if not authenticated after loading
+  // Requirements: 3.4 - Redirect with session_expired error
   useEffect(() => {
     // Don't redirect if still processing token or loading
     if (isProcessingToken || isLoading) {
@@ -226,10 +243,8 @@ export function AuthProvider({ children, requiredRole }: AuthProviderProps): JSX
     }
 
     if (!user) {
-      console.log('Not authenticated after loading, redirecting...');
-      clearUserSession();
-      const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
-      window.location.href = authUrl;
+      console.log('Not authenticated after loading, redirecting with session_expired...');
+      handleAuthError('session_expired');
     }
   }, [isLoading, user, isProcessingToken]);
 
@@ -254,8 +269,10 @@ export function AuthProvider({ children, requiredRole }: AuthProviderProps): JSX
     }
     clearUserSession();
     await signOut();
-    const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
-    window.location.href = authUrl;
+    // Redirect to auth without error (normal logout)
+    redirectToAuth({
+      includeReturnUrl: false,
+    });
   };
 
   // Show loading while processing token or checking auth

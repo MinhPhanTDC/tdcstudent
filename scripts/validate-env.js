@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Validate required environment variables before build
+ * Validate required environment variables before build/deployment
  * 
  * Usage:
- *   node scripts/validate-env.js           # Validate all
- *   node scripts/validate-env.js --strict  # Fail on optional missing too
- *   node scripts/validate-env.js --quiet   # Minimal output
+ *   node scripts/validate-env.js              # Validate for development
+ *   node scripts/validate-env.js --strict     # Validate for production (all vars required)
+ *   node scripts/validate-env.js --production # Same as --strict
+ *   node scripts/validate-env.js --quiet      # Minimal output
+ *   node scripts/validate-env.js --json       # Output as JSON
  */
 
 const fs = require('fs');
@@ -14,8 +16,9 @@ const path = require('path');
 
 // Parse CLI arguments
 const args = process.argv.slice(2);
-const isStrict = args.includes('--strict');
+const isStrict = args.includes('--strict') || args.includes('--production');
 const isQuiet = args.includes('--quiet');
+const isJson = args.includes('--json');
 
 // Load .env.local if exists
 function loadEnvFile(filePath) {
@@ -40,118 +43,261 @@ function loadEnvFile(filePath) {
 loadEnvFile(path.join(process.cwd(), '.env.local'));
 loadEnvFile(path.join(process.cwd(), '.env'));
 
-// Import schema
-let envSchema;
-try {
-  envSchema = require('../packages/config/env/env.schema.js').envSchema;
-} catch {
-  // Fallback if schema not found
-  envSchema = {
-    required: [
-      { key: 'NEXT_PUBLIC_FIREBASE_API_KEY', description: 'Firebase API Key' },
-      { key: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', description: 'Firebase Auth Domain' },
-      { key: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID', description: 'Firebase Project ID' },
-    ],
-    optional: [
-      { key: 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', description: 'Firebase Storage Bucket' },
-      { key: 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', description: 'Firebase Messaging Sender ID' },
-      { key: 'NEXT_PUBLIC_FIREBASE_APP_ID', description: 'Firebase App ID' },
-    ],
-    urls: [
-      { key: 'NEXT_PUBLIC_AUTH_URL', description: 'Auth app URL', default: 'http://localhost:3000' },
-      { key: 'NEXT_PUBLIC_ADMIN_URL', description: 'Admin app URL', default: 'http://localhost:3001' },
-      { key: 'NEXT_PUBLIC_STUDENT_URL', description: 'Student app URL', default: 'http://localhost:3002' },
-    ],
-  };
-}
+// Environment schema with production requirements
+const envSchema = {
+  // Firebase - Required for all environments
+  required: [
+    {
+      key: 'NEXT_PUBLIC_FIREBASE_API_KEY',
+      description: 'Firebase API Key',
+      validate: (value) => value && value.length > 10 && !value.includes('your-'),
+      errorMessage: 'Must be a valid Firebase API key',
+    },
+    {
+      key: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+      description: 'Firebase Auth Domain',
+      validate: (value) => value && value.includes('.firebaseapp.com'),
+      errorMessage: 'Must be a valid Firebase Auth Domain (e.g., project-id.firebaseapp.com)',
+    },
+    {
+      key: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+      description: 'Firebase Project ID',
+      validate: (value) => value && value.length > 3 && !value.includes('your-'),
+      errorMessage: 'Must be a valid Firebase Project ID',
+    },
+  ],
+
+  // Firebase - Optional for dev, required for production
+  production: [
+    {
+      key: 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
+      description: 'Firebase Storage Bucket',
+      validate: (value) => value && (value.includes('.appspot.com') || value.includes('.firebasestorage.app')),
+      errorMessage: 'Must be a valid Firebase Storage Bucket (e.g., project-id.appspot.com or project-id.firebasestorage.app)',
+    },
+    {
+      key: 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+      description: 'Firebase Messaging Sender ID',
+      validate: (value) => value && /^\d+$/.test(value),
+      errorMessage: 'Must be a numeric Messaging Sender ID',
+    },
+    {
+      key: 'NEXT_PUBLIC_FIREBASE_APP_ID',
+      description: 'Firebase App ID',
+      validate: (value) => value && value.includes(':'),
+      errorMessage: 'Must be a valid Firebase App ID',
+    },
+  ],
+
+  // App URLs - Required for production
+  urls: [
+    {
+      key: 'NEXT_PUBLIC_AUTH_URL',
+      description: 'Auth app URL',
+      default: 'http://localhost:3000',
+      productionValidate: (value) => value && value.startsWith('https://'),
+      productionErrorMessage: 'Production URL must use HTTPS',
+    },
+    {
+      key: 'NEXT_PUBLIC_ADMIN_URL',
+      description: 'Admin app URL',
+      default: 'http://localhost:3001',
+      productionValidate: (value) => value && value.startsWith('https://'),
+      productionErrorMessage: 'Production URL must use HTTPS',
+    },
+    {
+      key: 'NEXT_PUBLIC_STUDENT_URL',
+      description: 'Student app URL',
+      default: 'http://localhost:3002',
+      productionValidate: (value) => value && value.startsWith('https://'),
+      productionErrorMessage: 'Production URL must use HTTPS',
+    },
+  ],
+};
 
 function log(message) {
-  if (!isQuiet) console.log(message);
+  if (!isQuiet && !isJson) console.log(message);
 }
 
 function validateEnv() {
-  log('🔍 Validating environment variables...\n');
+  log('╔════════════════════════════════════════════════════════════╗');
+  log('║           Environment Variables Validation                 ║');
+  log('╚════════════════════════════════════════════════════════════╝');
+  log('');
+  log(`Mode: ${isStrict ? 'Production (strict)' : 'Development'}`);
+  log('');
 
   const results = {
-    required: { present: [], missing: [] },
-    optional: { present: [], missing: [] },
-    urls: { present: [], missing: [] },
+    required: { valid: [], invalid: [], missing: [] },
+    production: { valid: [], invalid: [], missing: [] },
+    urls: { valid: [], invalid: [], missing: [], defaults: [] },
   };
 
   // Check required vars
-  for (const { key, description } of envSchema.required) {
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  log('📋 Required Environment Variables:');
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  for (const { key, description, validate, errorMessage } of envSchema.required) {
     const value = process.env[key];
-    if (value && value !== '' && !value.includes('your-')) {
-      results.required.present.push({ key, description });
-    } else {
+    
+    if (!value) {
       results.required.missing.push({ key, description });
-    }
-  }
-
-  // Check optional vars
-  for (const { key, description } of envSchema.optional) {
-    if (process.env[key]) {
-      results.optional.present.push({ key, description });
+      log(`   ❌ ${key} - MISSING`);
+    } else if (validate && !validate(value)) {
+      results.required.invalid.push({ key, description, errorMessage });
+      log(`   ❌ ${key} - INVALID (${errorMessage})`);
     } else {
-      results.optional.missing.push({ key, description });
+      results.required.valid.push({ key, description });
+      log(`   ✅ ${key}`);
     }
   }
+  log('');
 
-  // Check URL vars (apply defaults)
-  for (const { key, description, default: defaultValue } of envSchema.urls) {
-    if (process.env[key]) {
-      results.urls.present.push({ key, description });
+  // Check production vars (required in strict mode)
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  log(`📋 Production Environment Variables ${isStrict ? '(Required)' : '(Optional)'}:`);
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  for (const { key, description, validate, errorMessage } of envSchema.production) {
+    const value = process.env[key];
+    
+    if (!value) {
+      results.production.missing.push({ key, description });
+      log(`   ${isStrict ? '❌' : '⚠️ '} ${key} - ${isStrict ? 'MISSING' : 'Not set'}`);
+    } else if (validate && !validate(value)) {
+      results.production.invalid.push({ key, description, errorMessage });
+      log(`   ❌ ${key} - INVALID (${errorMessage})`);
     } else {
-      results.urls.missing.push({ key, description, default: defaultValue });
+      results.production.valid.push({ key, description });
+      log(`   ✅ ${key}`);
     }
   }
+  log('');
 
-  // Report results
-  if (results.required.present.length > 0) {
-    log('✅ Required environment variables:');
-    results.required.present.forEach(({ key }) => log(`   ✓ ${key}`));
-    log('');
+  // Check URL vars
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  log(`📋 Application URLs ${isStrict ? '(Production)' : '(Development)'}:`);
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  for (const { key, description, default: defaultValue, productionValidate, productionErrorMessage } of envSchema.urls) {
+    const value = process.env[key];
+    
+    if (!value) {
+      results.urls.defaults.push({ key, description, default: defaultValue });
+      log(`   ℹ️  ${key} = ${defaultValue} (default)`);
+    } else if (isStrict && productionValidate && !productionValidate(value)) {
+      results.urls.invalid.push({ key, description, errorMessage: productionErrorMessage });
+      log(`   ❌ ${key} - INVALID (${productionErrorMessage})`);
+    } else {
+      results.urls.valid.push({ key, description, value });
+      log(`   ✅ ${key} = ${value}`);
+    }
   }
+  log('');
 
-  if (results.optional.present.length > 0) {
-    log('✅ Optional environment variables:');
-    results.optional.present.forEach(({ key }) => log(`   ✓ ${key}`));
-    log('');
-  }
-
-  if (results.urls.missing.length > 0) {
-    log('ℹ️  URL variables using defaults:');
-    results.urls.missing.forEach(({ key, default: def }) => log(`   - ${key} = ${def}`));
-    log('');
-  }
-
-  if (results.optional.missing.length > 0) {
-    log('⚠️  Optional variables not set:');
-    results.optional.missing.forEach(({ key, description }) => 
-      log(`   - ${key} (${description})`)
-    );
-    log('');
-  }
-
-  // Handle errors
+  // Calculate errors
+  const errors = [];
+  
+  // Required vars must always be present and valid
   if (results.required.missing.length > 0) {
-    console.error('❌ REQUIRED environment variables missing:');
-    results.required.missing.forEach(({ key, description }) => 
-      console.error(`   - ${key} (${description})`)
-    );
+    errors.push({
+      type: 'MISSING_REQUIRED',
+      message: 'Required environment variables are missing',
+      variables: results.required.missing,
+    });
+  }
+  
+  if (results.required.invalid.length > 0) {
+    errors.push({
+      type: 'INVALID_REQUIRED',
+      message: 'Required environment variables are invalid',
+      variables: results.required.invalid,
+    });
+  }
+  
+  // Production vars required in strict mode
+  if (isStrict) {
+    if (results.production.missing.length > 0) {
+      errors.push({
+        type: 'MISSING_PRODUCTION',
+        message: 'Production environment variables are missing',
+        variables: results.production.missing,
+      });
+    }
+    
+    if (results.production.invalid.length > 0) {
+      errors.push({
+        type: 'INVALID_PRODUCTION',
+        message: 'Production environment variables are invalid',
+        variables: results.production.invalid,
+      });
+    }
+    
+    if (results.urls.invalid.length > 0) {
+      errors.push({
+        type: 'INVALID_URLS',
+        message: 'Production URLs are invalid',
+        variables: results.urls.invalid,
+      });
+    }
+    
+    if (results.urls.defaults.length > 0) {
+      errors.push({
+        type: 'MISSING_URLS',
+        message: 'Production URLs are using development defaults',
+        variables: results.urls.defaults,
+      });
+    }
+  }
+
+  // Output JSON if requested
+  if (isJson) {
+    console.log(JSON.stringify({
+      success: errors.length === 0,
+      mode: isStrict ? 'production' : 'development',
+      results,
+      errors,
+    }, null, 2));
+    process.exit(errors.length > 0 ? 1 : 0);
+    return;
+  }
+
+  // Report errors
+  if (errors.length > 0) {
+    log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('❌ VALIDATION ERRORS:');
+    log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    errors.forEach(({ type, message, variables }) => {
+      console.error(`\n   ${type}: ${message}`);
+      variables.forEach(({ key, description, errorMessage }) => {
+        console.error(`      - ${key} (${description})`);
+        if (errorMessage) {
+          console.error(`        ${errorMessage}`);
+        }
+      });
+    });
+    
     console.error('\n📝 To fix this:');
     console.error('   1. Copy .env.example to .env.local');
     console.error('   2. Fill in your Firebase credentials from Firebase Console');
-    console.error('   3. Run the build again\n');
+    console.error('   3. For production, ensure all URLs use HTTPS');
+    console.error('   4. Run the validation again\n');
+    
     process.exit(1);
   }
 
-  if (isStrict && results.optional.missing.length > 0) {
-    console.error('❌ Strict mode: Optional variables are required');
-    process.exit(1);
-  }
-
-  log('✅ Environment validation passed!\n');
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  log('✅ Environment validation passed!');
+  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  log('');
 }
 
-validateEnv();
+// Export for testing
+module.exports = { validateEnv, envSchema };
+
+// Run if called directly
+if (require.main === module) {
+  validateEnv();
+}

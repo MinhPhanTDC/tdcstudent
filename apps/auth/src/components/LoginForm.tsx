@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginCredentialsSchema, type LoginCredentials } from '@tdc/schemas';
@@ -8,13 +8,31 @@ import { Button, Input } from '@tdc/ui';
 import { useLogin } from '@/hooks/useLogin';
 import { redirectByRole } from '@/lib/redirect';
 import { getErrorMessage } from '@/lib/errorMessages';
+import { 
+  parseAuthErrorFromUrl, 
+  getErrorCodeFromAuthError, 
+  clearAuthParamsFromUrl,
+  type AuthErrorType 
+} from '@/lib/authRedirect';
 
 /**
  * Login form component - redesigned to match new UI
+ * Handles auth errors from URL parameters (Requirements: 3.4)
  */
 export function LoginForm(): JSX.Element {
   const { login, isLoading, error } = useLogin();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [urlError, setUrlError] = useState<AuthErrorType | null>(null);
+
+  // Check for auth error in URL on mount
+  useEffect(() => {
+    const authError = parseAuthErrorFromUrl();
+    if (authError) {
+      setUrlError(authError);
+      // Clear the error from URL after reading it
+      clearAuthParamsFromUrl();
+    }
+  }, []);
 
   const {
     register,
@@ -31,6 +49,9 @@ export function LoginForm(): JSX.Element {
   const onSubmit = async (data: LoginCredentials): Promise<void> => {
     if (isRedirecting) return;
 
+    // Clear URL error when user attempts to login
+    setUrlError(null);
+
     const result = await login(data);
 
     if (result.success) {
@@ -40,6 +61,13 @@ export function LoginForm(): JSX.Element {
       }, 100);
     }
   };
+
+  // Get the error message to display (prioritize login error over URL error)
+  const displayError = error 
+    ? getErrorMessage(error.code) 
+    : urlError 
+      ? getErrorMessage(getErrorCodeFromAuthError(urlError))
+      : null;
 
   // Show redirecting state
   if (isRedirecting) {
@@ -53,13 +81,13 @@ export function LoginForm(): JSX.Element {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {error && (
+      {displayError && (
         <div
           className="rounded-lg bg-red-50 p-4 text-sm text-red-700"
           role="alert"
           aria-live="polite"
         >
-          {getErrorMessage(error.code)}
+          {displayError}
         </div>
       )}
 

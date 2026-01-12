@@ -4,20 +4,20 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, TextArea, Checkbox, Spinner, FormError } from '@tdc/ui';
 import { CreateSemesterInputSchema, type CreateSemesterInput, type Semester } from '@tdc/schemas';
+import { useFormError } from '@/hooks/useFormError';
+import { type AppError } from '@tdc/types';
 
 export interface SemesterFormProps {
   semester?: Semester;
   defaultOrder?: number;
-  onSubmit: (data: CreateSemesterInput) => Promise<void>;
+  onSubmit: (data: CreateSemesterInput) => Promise<{ success: boolean; error?: AppError }>;
   onCancel: () => void;
   isSubmitting: boolean;
-  /** Error message from API */
-  error?: string | null;
 }
 
 /**
  * SemesterForm component - form for creating/editing semesters
- * Requirements: 1.2, 1.8, 1.9, 7.3
+ * Requirements: 1.2, 1.8, 1.9, 7.3, 1.5, 3.3
  */
 export function SemesterForm({
   semester,
@@ -25,14 +25,15 @@ export function SemesterForm({
   onSubmit,
   onCancel,
   isSubmitting,
-  error,
 }: SemesterFormProps): JSX.Element {
   const isEditMode = !!semester;
+  const { formError, handleApiError, clearFormError } = useFormError<CreateSemesterInput>();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm<CreateSemesterInput>({
     resolver: zodResolver(CreateSemesterInputSchema),
     defaultValues: {
@@ -45,7 +46,12 @@ export function SemesterForm({
   });
 
   const onFormSubmit = async (data: CreateSemesterInput): Promise<void> => {
-    await onSubmit(data);
+    clearFormError();
+    const result = await onSubmit(data);
+    
+    if (!result.success && result.error) {
+      handleApiError(result.error, setError);
+    }
   };
 
   return (
@@ -132,7 +138,7 @@ export function SemesterForm({
       </div>
 
       {/* Form-level error */}
-      <FormError message={error} />
+      <FormError message={formError} />
 
       {/* Form actions */}
       <div className="flex justify-end gap-3 border-t border-secondary-200 pt-6">

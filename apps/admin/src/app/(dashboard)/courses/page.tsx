@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Card, Button, EmptyState, ConfirmModal, useToast } from '@tdc/ui';
+import { Card, Button, EmptyState, ConfirmModal, useToast, Skeleton } from '@tdc/ui';
 import { useCourses, useDeleteCourse, useToggleCourseActive } from '@/hooks/useCourses';
 import { useSemesters } from '@/hooks/useSemesters';
 import { CourseSemesterFilter, CourseCard } from '@/components/features/course-management';
@@ -11,27 +11,27 @@ import type { Course, Semester } from '@tdc/schemas';
 
 /**
  * Skeleton component for loading state
- * Requirements: 8.1
+ * Requirements: 1.1 - Display consistent loading indicators with skeleton screens
  */
 function CourseListSkeleton(): JSX.Element {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
         <Card key={i}>
-          <div className="animate-pulse p-4">
+          <div className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="h-16 w-24 rounded bg-secondary-100" />
+                <Skeleton variant="rectangular" width={96} height={64} />
                 <div className="space-y-2">
-                  <div className="h-5 w-48 rounded bg-secondary-200" />
-                  <div className="h-4 w-64 rounded bg-secondary-100" />
-                  <div className="h-3 w-32 rounded bg-secondary-100" />
+                  <Skeleton variant="text" width={192} height={20} />
+                  <Skeleton variant="text" width={256} height={16} />
+                  <Skeleton variant="text" width={128} height={12} />
                 </div>
               </div>
               <div className="flex gap-2">
-                <div className="h-8 w-16 rounded bg-secondary-100" />
-                <div className="h-8 w-20 rounded bg-secondary-100" />
-                <div className="h-8 w-16 rounded bg-secondary-100" />
+                <Skeleton variant="rectangular" width={64} height={32} />
+                <Skeleton variant="rectangular" width={80} height={32} />
+                <Skeleton variant="rectangular" width={64} height={32} />
               </div>
             </div>
           </div>

@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Static export for Firebase Hosting
+  output: 'export',
+  trailingSlash: true,
+  
   reactStrictMode: true,
   transpilePackages: ['@tdc/ui', '@tdc/firebase', '@tdc/schemas', '@tdc/types'],
   eslint: {
@@ -9,6 +13,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
+    unoptimized: true, // Required for static export
     remotePatterns: [
       {
         protocol: 'https',
@@ -18,6 +23,7 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['firebase', 'undici'],
+    optimizePackageImports: ['@tdc/ui', '@tdc/firebase', '@tdc/schemas'],
   },
   webpack: (config) => {
     config.externals = [...(config.externals || []), 'undici'];
@@ -28,6 +34,10 @@ const nextConfig = {
     
     return config;
   },
+  // Optimize production builds
+  productionBrowserSourceMaps: false,
+  poweredByHeader: false,
+  compress: true,
 };
 
 module.exports = nextConfig;

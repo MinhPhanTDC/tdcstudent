@@ -19,7 +19,9 @@
     "deploy:auth": "bash scripts/deploy.sh auth",
     "deploy:admin": "bash scripts/deploy.sh admin",
     "deploy:student": "bash scripts/deploy.sh student",
-    "deploy:rules": "bash scripts/deploy.sh rules"
+    "deploy:rules": "bash scripts/deploy.sh rules",
+    "deploy:dry-run": "bash scripts/deploy.sh --dry-run",
+    "rules:validate": "node scripts/validate-rules.js"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.0",

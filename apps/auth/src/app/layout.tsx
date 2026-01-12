@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { FirebaseProvider } from '@/providers/FirebaseProvider';
+import { Providers } from '@/components/Providers';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'] });
@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={inter.className}>
-        <FirebaseProvider>{children}</FirebaseProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
