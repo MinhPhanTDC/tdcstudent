@@ -1,0 +1,264 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Get user document
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && getUserDoc().data.role == 'admin';
+    }
+
+    // Check if user is the owner of the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if only specific fields are being updated
+    function onlyUpdating(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // Check if a semester exists (for course semesterId validation)
+    function semesterExists(semesterId) {
+      return exists(/databases/$(database)/documents/semesters/$(semesterId));
+    }
+
+    // ============================================
+    // Users Collection
+    // ============================================
+    match /users/{userId} {
+      // Users can read their own profile, admins can read all
+      // Note: isAuthenticated() checks request.auth != null which is set by Firebase Auth
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Only admins can create/update/delete users
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Students Collection (Phase 2 - Updated)
+    // ============================================
+    match /students/{studentId} {
+      // Admin has full read access
+      // Students can only read their own data
+      allow read: if isAdmin() || isOwner(resource.data.userId);
+
+      // Only admins can create students
+      allow create: if isAdmin();
+      
+      // Only admins can delete students
+      allow delete: if isAdmin();
+
+      // Admins can update all fields
+      // Students can only update their progress
+      allow update: if isAdmin() ||
+        (isOwner(resource.data.userId) && onlyUpdating(['progress', 'updatedAt']));
+    }
+
+    // ============================================
+    // Semesters Collection (Phase 2)
+    // ============================================
+    match /semesters/{semesterId} {
+      // All authenticated users can read semesters
+      allow read: if isAuthenticated();
+
+      // Only admins can create/update/delete semesters
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Courses Collection (Phase 2 - Updated)
+    // ============================================
+    match /courses/{courseId} {
+      // Authenticated users can read published courses
+      // Admins can read all courses
+      allow read: if isAuthenticated() && (resource.data.isPublished == true || isAdmin());
+
+      // Only admins can create courses
+      // Validate semesterId references an existing semester (if provided)
+      allow create: if isAdmin() && 
+        (!('semesterId' in request.resource.data) || 
+         request.resource.data.semesterId == null || 
+         request.resource.data.semesterId == '' || 
+         semesterExists(request.resource.data.semesterId));
+
+      // Only admins can update courses
+      // Validate semesterId references an existing semester if being changed
+      allow update: if isAdmin() && 
+        (!('semesterId' in request.resource.data) ||
+         request.resource.data.semesterId == resource.data.semesterId ||
+         request.resource.data.semesterId == null ||
+         request.resource.data.semesterId == '' ||
+         semesterExists(request.resource.data.semesterId));
+
+      // Only admins can delete courses
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Progress Collection (Phase 3 - Updated Phase 4)
+    // ============================================
+    match /progress/{progressId} {
+      // Students can read their own progress
+      // Admins can read all progress records
+      allow read: if isAdmin() || isOwner(resource.data.studentId);
+
+      // Only admins can write progress records (Phase 4 requirement)
+      // This ensures tracking changes go through admin approval workflow
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Tracking Logs Collection (Phase 4)
+    // ============================================
+    match /trackingLogs/{logId} {
+      // Only admins can read tracking logs (audit trail)
+      allow read: if isAdmin();
+
+      // Only admins can write tracking logs
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Notifications Collection (Phase 4)
+    // ============================================
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+
+      // Users can only update isRead and readAt fields on their own notifications
+      allow update: if isAuthenticated() && 
+        isOwner(resource.data.userId) && 
+        onlyUpdating(['isRead', 'readAt', 'updatedAt']);
+
+      // Only admins can create notifications
+      allow create: if isAdmin();
+
+      // Only admins can delete notifications
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Project Submissions Collection (Phase 3)
+    // ============================================
+    match /projectSubmissions/{submissionId} {
+      // Students can read their own submissions
+      // Admins can read all submissions
+      allow read: if isAdmin() || isOwner(resource.data.studentId);
+
+      // Students can create their own submissions
+      // Admins can create any submission
+      allow create: if isAdmin() || 
+        (isAuthenticated() && request.resource.data.studentId == request.auth.uid);
+
+      // Students can update their own submissions
+      // Admins can update any submission
+      allow update: if isAdmin() || isOwner(resource.data.studentId);
+
+      // Students can delete their own submissions
+      // Admins can delete any submission
+      allow delete: if isAdmin() || isOwner(resource.data.studentId);
+    }
+
+    // ============================================
+    // Lab Requirements Collection (Phase 6)
+    // ============================================
+    match /labRequirements/{requirementId} {
+      // Admins can read all requirements
+      // Students can only read active requirements
+      allow read: if isAdmin() || 
+        (isAuthenticated() && resource.data.isActive == true);
+
+      // Only admins can create/update/delete lab requirements
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Student Lab Progress Collection (Phase 6)
+    // ============================================
+    match /studentLabProgress/{progressId} {
+      // Students can read their own progress
+      // Admins can read all progress records
+      allow read: if isAdmin() || isOwner(resource.data.studentId);
+
+      // Students can create their own progress records
+      // Admins can create any progress record
+      allow create: if isAdmin() || 
+        (isAuthenticated() && request.resource.data.studentId == request.auth.uid);
+
+      // Students can update their own progress (mark as complete, pending)
+      // Admins can update any progress (approve, reject verifications)
+      allow update: if isAdmin() || 
+        (isOwner(resource.data.studentId) && 
+         onlyUpdating(['status', 'completedAt', 'notes', 'updatedAt']));
+
+      // Only admins can delete progress records
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Settings Collection (Phase 6)
+    // ============================================
+    match /settings/{settingId} {
+      // Handbook settings - public read for login page flipbook
+      // Admin write for uploading new handbook
+      allow read: if settingId == 'handbook';
+      
+      // Only admins can write settings
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Majors Collection (Phase 5)
+    // ============================================
+    match /majors/{majorId} {
+      // All authenticated users can read majors
+      // Students need to view available majors for selection
+      allow read: if isAuthenticated();
+
+      // Only admins can create/update/delete majors
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // Major Courses Collection (Phase 5)
+    // ============================================
+    match /majorCourses/{majorCourseId} {
+      // All authenticated users can read major courses
+      // Students need to view courses in their selected major
+      allow read: if isAuthenticated();
+
+      // Only admins can create/update/delete major course assignments
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

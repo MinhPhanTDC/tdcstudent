@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "tdcstudent-31d45"
+  },
+  "targets": {
+    "tdcstudent-31d45": {
+      "hosting": {
+        "auth": ["tdc-auth"],
+        "admin": ["tdc-admin"],
+        "student": ["tdc-student"]
+      }
+    }
+  }
+}
