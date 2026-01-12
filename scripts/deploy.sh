@@ -206,19 +206,15 @@ if [ "$TARGET" = "all" ] || [ "$TARGET" = "rules" ]; then
   
   # Check if firebase-tools is available
   if command -v firebase &> /dev/null; then
-    cd firebase
-    
     # Validate rules syntax by attempting to compile them
-    firebase firestore:rules:validate firestore.rules 2>/dev/null || {
+    firebase firestore:rules:validate firebase/firestore.rules 2>/dev/null || {
       # If validate command doesn't exist, try a dry-run deploy
       echo "   Checking rules syntax..."
       firebase deploy --only firestore:rules --dry-run 2>&1 | grep -i "error" && {
-        cd ..
         handle_error "Firestore Rules Validation" 1
       }
     }
     
-    cd ..
     echo -e "${GREEN}✅ Firestore rules are valid!${NC}"
   else
     echo -e "${YELLOW}⚠️  Firebase CLI not found. Skipping rules validation.${NC}"
@@ -256,22 +252,32 @@ if [ "$TARGET" = "all" ] || [ "$TARGET" = "auth" ]; then
   fi
 fi
 
-# Check admin app output (SSR - .next directory)
+# Check admin app output (static export)
 if [ "$TARGET" = "all" ] || [ "$TARGET" = "admin" ]; then
-  if [ -d "apps/admin/.next" ]; then
-    echo "   ✅ Admin app: .next directory exists"
+  if [ -d "apps/admin/out" ]; then
+    if [ -f "apps/admin/out/index.html" ]; then
+      echo "   ✅ Admin app: out/index.html exists"
+    else
+      echo -e "   ${RED}❌ Admin app: out/index.html not found${NC}"
+      BUILD_VALID=false
+    fi
   else
-    echo -e "   ${RED}❌ Admin app: .next directory not found${NC}"
+    echo -e "   ${RED}❌ Admin app: out directory not found${NC}"
     BUILD_VALID=false
   fi
 fi
 
-# Check student app output (SSR - .next directory)
+# Check student app output (static export)
 if [ "$TARGET" = "all" ] || [ "$TARGET" = "student" ]; then
-  if [ -d "apps/student/.next" ]; then
-    echo "   ✅ Student app: .next directory exists"
+  if [ -d "apps/student/out" ]; then
+    if [ -f "apps/student/out/index.html" ]; then
+      echo "   ✅ Student app: out/index.html exists"
+    else
+      echo -e "   ${RED}❌ Student app: out/index.html not found${NC}"
+      BUILD_VALID=false
+    fi
   else
-    echo -e "   ${RED}❌ Student app: .next directory not found${NC}"
+    echo -e "   ${RED}❌ Student app: out directory not found${NC}"
     BUILD_VALID=false
   fi
 fi
@@ -334,41 +340,36 @@ else
   echo "🔥 Step 8: Deploying to Firebase..."
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   
-  cd firebase
-  
   case $TARGET in
     "all")
       echo "   Deploying all apps and rules..."
-      firebase deploy --only hosting || { cd ..; handle_error "Firebase Deployment" $?; }
-      firebase deploy --only firestore:rules || { cd ..; handle_error "Firebase Deployment" $?; }
-      firebase deploy --only storage || { cd ..; handle_error "Firebase Deployment" $?; }
+      firebase deploy --only hosting || handle_error "Firebase Deployment" $?
+      firebase deploy --only firestore:rules || handle_error "Firebase Deployment" $?
+      firebase deploy --only storage || handle_error "Firebase Deployment" $?
       ;;
     "auth")
       echo "   Deploying Auth app..."
-      firebase deploy --only hosting:auth || { cd ..; handle_error "Firebase Deployment" $?; }
+      firebase deploy --only hosting:auth || handle_error "Firebase Deployment" $?
       ;;
     "admin")
       echo "   Deploying Admin app..."
-      firebase deploy --only hosting:admin || { cd ..; handle_error "Firebase Deployment" $?; }
+      firebase deploy --only hosting:admin || handle_error "Firebase Deployment" $?
       ;;
     "student")
       echo "   Deploying Student app..."
-      firebase deploy --only hosting:student || { cd ..; handle_error "Firebase Deployment" $?; }
+      firebase deploy --only hosting:student || handle_error "Firebase Deployment" $?
       ;;
     "rules")
       echo "   Deploying Firestore and Storage rules..."
-      firebase deploy --only firestore:rules || { cd ..; handle_error "Firebase Deployment" $?; }
-      firebase deploy --only storage || { cd ..; handle_error "Firebase Deployment" $?; }
+      firebase deploy --only firestore:rules || handle_error "Firebase Deployment" $?
+      firebase deploy --only storage || handle_error "Firebase Deployment" $?
       ;;
     *)
       echo -e "${RED}❌ Unknown target: $TARGET${NC}"
       echo "   Available targets: all, auth, admin, student, rules"
-      cd ..
       exit 1
       ;;
   esac
-  
-  cd ..
   
   echo -e "${GREEN}✅ Firebase deployment completed!${NC}"
 fi

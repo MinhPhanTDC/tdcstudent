@@ -1,15 +1,15 @@
 {
   "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+    "rules": "firebase/firestore.rules",
+    "indexes": "firebase/firestore.indexes.json"
   },
   "storage": {
-    "rules": "storage.rules"
+    "rules": "firebase/storage.rules"
   },
   "hosting": [
     {
       "target": "auth",
-      "public": "../apps/auth/out",
+      "public": "apps/auth/out",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {
@@ -20,7 +20,7 @@
     },
     {
       "target": "admin",
-      "public": "../apps/admin/out",
+      "public": "apps/admin/out",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {
@@ -31,7 +31,7 @@
     },
     {
       "target": "student",
-      "public": "../apps/student/out",
+      "public": "apps/student/out",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {

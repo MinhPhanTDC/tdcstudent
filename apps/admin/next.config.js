@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Note: Static export removed due to dynamic routes
-  // Firebase Hosting configured for SPA mode with rewrites
+  // Static export for Firebase Hosting
+  output: 'export',
   trailingSlash: true,
   
   reactStrictMode: true,
