@@ -12,9 +12,22 @@ service firebase.storage {
       return request.auth != null;
     }
     
-    // Check if user is admin (requires custom claims)
+    // Check if user is admin using custom claims (set by Cloud Functions)
+    // This is faster and free (no Firestore reads)
     function isAdmin() {
       return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+    
+    // Fallback: Check Firestore if custom claims not set yet
+    // This handles the transition period when claims are being set
+    function isAdminFallback() {
+      return isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Combined check: Try custom claims first, fallback to Firestore
+    function isAdminWithFallback() {
+      return isAdmin() || isAdminFallback();
     }
     
     // Check file size (max 10MB)
@@ -84,8 +97,10 @@ service firebase.storage {
       // Anyone can read media files (for login backgrounds)
       allow read: if true;
       
-      // Only authenticated users can upload media files
-      allow write: if isAuthenticated() && isValidSize();
+      // Only admins can upload media files
+      // Uses custom claims (fast) with Firestore fallback (during transition)
+      allow create: if isAdminWithFallback() && isValidSize();
+      allow update, delete: if isAdminWithFallback();
     }
 
     // ============================================

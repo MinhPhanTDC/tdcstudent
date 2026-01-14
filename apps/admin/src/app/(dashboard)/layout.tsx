@@ -1,5 +1,6 @@
 import { AdminSidebar } from '@/components/layout/AdminSidebar';
 import { AdminHeader } from '@/components/layout/AdminHeader';
+import { UserDebugInfo } from '@/components/debug';
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
         <AdminHeader />
         <main className="p-6">{children}</main>
       </div>
+      <UserDebugInfo />
     </div>
   );
 }

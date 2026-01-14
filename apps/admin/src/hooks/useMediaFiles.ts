@@ -11,6 +11,7 @@ interface UseMediaFilesReturn {
   toggleActive: (id: string) => Promise<void>;
   uploadFile: (file: File, category: MediaCategory) => Promise<void>;
   isUploading: boolean;
+  clearError: () => void;
 }
 
 /**
@@ -30,7 +31,9 @@ export function useMediaFiles(filter?: MediaFilter): UseMediaFilesReturn {
     if (result.success) {
       setFiles(result.data);
     } else {
-      setError(result.error.message);
+      const errorMsg = result.error.message || 'Không thể tải danh sách file';
+      console.error('Failed to fetch files:', result.error);
+      setError(errorMsg);
     }
 
     setIsLoading(false);
@@ -41,28 +44,42 @@ export function useMediaFiles(filter?: MediaFilter): UseMediaFilesReturn {
   }, [fetchFiles]);
 
   const deleteFile = async (id: string): Promise<void> => {
+    setError(null);
     const result = await mediaRepository.delete(id);
     if (result.success) {
       setFiles((prev) => prev.filter((f) => f.id !== id));
     } else {
-      setError(result.error.message);
+      const errorMsg = result.error.message || 'Không thể xóa file';
+      console.error('Failed to delete file:', result.error);
+      setError(errorMsg);
     }
   };
 
   const toggleActive = async (id: string): Promise<void> => {
+    setError(null);
     const result = await mediaRepository.toggleActive(id);
     if (result.success) {
       setFiles((prev) =>
         prev.map((f) => (f.id === id ? { ...f, isActive: result.data.isActive } : f))
       );
     } else {
-      setError(result.error.message);
+      const errorMsg = result.error.message || 'Không thể cập nhật trạng thái';
+      console.error('Failed to toggle active:', result.error);
+      setError(errorMsg);
     }
   };
 
   const uploadFile = async (file: File, category: MediaCategory): Promise<void> => {
     setIsUploading(true);
     setError(null);
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError(`File "${file.name}" quá lớn. Kích thước tối đa: 10MB`);
+      setIsUploading(false);
+      return;
+    }
 
     // Determine file type
     let type: 'image' | 'video' | 'document' | 'other' = 'other';
@@ -78,7 +95,13 @@ export function useMediaFiles(filter?: MediaFilter): UseMediaFilesReturn {
       type = 'document';
     }
 
-    console.log('Starting upload:', { name: file.name, type, category, size: file.size });
+    console.log('Starting upload:', { 
+      name: file.name, 
+      type, 
+      category, 
+      size: file.size,
+      mimeType: file.type 
+    });
 
     const result = await mediaRepository.create(file, {
       name: file.name,
@@ -92,11 +115,24 @@ export function useMediaFiles(filter?: MediaFilter): UseMediaFilesReturn {
       console.log('Upload successful:', result.data);
       setFiles((prev) => [result.data, ...prev]);
     } else {
+      const errorMsg = result.error.message || 'Không thể upload file';
       console.error('Upload failed:', result.error);
-      setError(result.error.message);
+      
+      // Provide more helpful error messages
+      if (errorMsg.includes('permission') || errorMsg.includes('403')) {
+        setError('Bạn không có quyền upload file. Vui lòng đăng nhập lại hoặc liên hệ admin.');
+      } else if (errorMsg.includes('network') || errorMsg.includes('Failed to fetch')) {
+        setError('Lỗi kết nối mạng. Vui lòng kiểm tra internet và thử lại.');
+      } else {
+        setError(`Upload thất bại: ${errorMsg}`);
+      }
     }
 
     setIsUploading(false);
+  };
+
+  const clearError = (): void => {
+    setError(null);
   };
 
   return {
@@ -108,5 +144,6 @@ export function useMediaFiles(filter?: MediaFilter): UseMediaFilesReturn {
     toggleActive,
     uploadFile,
     isUploading,
+    clearError,
   };
 }

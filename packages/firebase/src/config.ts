@@ -108,7 +108,7 @@ function ensureInitialized(): void {
     try {
       _rtdb = getDatabase(_app);
     } catch (error) {
-      console.warn('Failed to initialize Realtime Database:', error);
+      // Silently ignore if RTDB not needed
       _rtdb = null;
     }
   }
